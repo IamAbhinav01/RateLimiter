@@ -16,6 +16,14 @@ const adminController = {
         const data = await redisTokenBucketService.resetBucket(identifier)
         res.json({ success: data.success, data: data })
     },
+    healthCheck(_req, res) {
+        res.json({
+            success: true,
+            service: 'Token Bucket Rate Limiter',
+            status: 'operational',
+            time: new Date().toISOString(),
+        })
+    },
 }
 
 module.exports = adminController

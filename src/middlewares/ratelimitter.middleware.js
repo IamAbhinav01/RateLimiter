@@ -7,7 +7,7 @@ const createRateLimiter = (options = {}) => {
     const {
         keyFn = (req) => req.ip,
         capacity,
-        refil,
+        refill,
         timeout,
         cost = 1,
         whitelist = [],
@@ -26,7 +26,7 @@ const createRateLimiter = (options = {}) => {
             return next()
         }
         const result = await redisTokenBucketService.isRequestAllowed(identifier, {
-            capacity, refil, timeout, cost
+            capacity, refill, timeout, cost
         })
         res.setHeader('X-RateLimit-Limit', result.capacity)
         res.setHeader('X-RateLimit-Remaining', result.remaining ?? 'N/A')
@@ -53,13 +53,13 @@ const createRateLimiter = (options = {}) => {
     }
 }
 const strictLimiter = createRateLimiter({
-    label: 'strict', capacity: 5, refil: 5, timeout: 10_000,
+    label: 'strict', capacity: 5, refill: 5, timeout: 100000,
 })
 
 const standardLimiter = createRateLimiter({ label: 'standard' })
 
 const premiumLimiter = createRateLimiter({
-    label: 'premium', capacity: 50, refil: 50, timeout: 10_000,
+    label: 'premium', capacity: 50, refill: 50, timeout: 10_000,
 })
 module.exports = {
     createRateLimiter, strictLimiter, standardLimiter, premiumLimiter

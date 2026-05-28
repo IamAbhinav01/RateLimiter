@@ -1,4 +1,4 @@
-const RedisConnection = require('../config/redisConfig');
+const RedisConnection = require('../config/redis.config');
 
 const {
     REDIS_TIMEOUT,
