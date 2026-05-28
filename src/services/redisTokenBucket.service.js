@@ -47,6 +47,7 @@ class RedisTokenBucketService {
         return `rl:tb:${identifier}`
     }
 
+
     async getBucketStatus(identifier) {
         const key = await this.getClientKey(identifier)
 
@@ -66,6 +67,57 @@ class RedisTokenBucketService {
         }
 
 
+    }
+
+
+    async isRequestAllowed(identifier, options = {}) {
+        const capacity = options.capacity ?? this.defaultCapacity
+        const refil = options.refil ?? this.defaultRefil
+        const timeout = options.timeout ?? this.defaultTimeout
+        const cost = options.cost ?? 1
+        const refillRateMs = refil / timeout //Ms
+        const key = this.getClientKey(identifier)
+        try {
+            const result = await this.redisClient.eval(
+                TOKEN_BUCKET_SCRIPT,
+                1,
+                key,
+                capacity,
+                refillRateMs,
+                Date.now(),
+                cost
+            )
+
+            return { allowed: result[0] === 1, remaining: Math.floor(parseFloat(result[1])), capacity, retryAfterMs: parseInt(result[2], 10), identifier }
+
+        } catch (error) {
+            console.log('[TokenBucket] Redis error:', error.message);
+
+            return { allowed: true, remaining: null, capacity, retryAfterMs: 0, identifier }
+        }
+    }
+    async resetBucket(identifier) {
+        const key = this.getClientKey(identifier);
+        try {
+            await this.redisClient.del(key)
+            return { success: true, identifier, message: `Bucket '${identifier}' reset to full capacity` }
+        } catch (error) {
+            return { success: false, identifier, error: err.message }
+        }
+    }
+    async listAllBuckets() {
+        const keys = []
+        let cursor = '0'
+        try {
+            do {
+                const [next, found] = await this.redisClient.scan(cursor, 'MATCH', 'rl:tb:*', 'COUNT', 100)
+                cursor = next
+                keys.push(...found)
+            } while (cursor !== '0')
+            return { count: keys.length, buckets: keys.map(k => k.replace('rl:tb:', '')) }
+        } catch (err) {
+            return { count: 0, buckets: [], error: err.message }
+        }
     }
 }
 
