@@ -4,7 +4,7 @@ A highly scalable, distributed rate limiter built with Node.js, Express, and Red
 
 ## 🏗 Architecture Diagram
 
-![alt text](rateLimiter.drawio.png)
+![alt text](ARCHITECTURE.jpg)
 
 ## 🚀 Features
 
@@ -29,6 +29,7 @@ A highly scalable, distributed rate limiter built with Node.js, Express, and Red
    npm install
    ```
 3. Create a `.env` file in the root directory (you can copy `.env.example` if available) and configure your variables:
+
    ```env
    PORT=3000
    REDIS_HOST=127.0.0.1
@@ -55,6 +56,7 @@ The rate at which a user gets their requests back is determined by this formula:
 **Time for 1 Token = `timeout / refill`**
 
 For example, if you set:
+
 - `capacity: 5` (Max burst of 5 requests)
 - `refill: 5`
 - `timeout: 10000` (10 seconds)
@@ -73,16 +75,16 @@ const standardLimiter = createRateLimiter({ label: 'standard' });
 
 // 2. Strict Limiter (Hardcoded: max 5 requests, refills 5 every 10s)
 const strictLimiter = createRateLimiter({
-    label: 'strict', 
-    capacity: 5, 
-    refill: 5, 
-    timeout: 10000 
+  label: 'strict',
+  capacity: 5,
+  refill: 5,
+  timeout: 10000,
 });
 
 // 3. Heavy Route (Costs 3 tokens per request instead of 1)
-const heavyLimiter = createRateLimiter({ 
-    label: 'heavy', 
-    cost: 3 
+const heavyLimiter = createRateLimiter({
+  label: 'heavy',
+  cost: 3,
 });
 
 // Apply to routes
@@ -104,5 +106,6 @@ If a user exhausts their bucket, they receive a `429 Too Many Requests` response
 ## 🛡 Whitelisting / Testing Locally
 
 By default, `127.0.0.1` and `::1` might be whitelisted in your `.env`. If you want to test rate-limiting against yourself locally via Postman:
+
 1. Temporarily remove your local IP from the `WHITELIST_IPS` in `.env`.
 2. OR: Because Express is set to `trust proxy`, you can inject an `X-Forwarded-For: 192.168.1.5` header in your Postman request to spoof a remote user.
